@@ -1,0 +1,17 @@
+{
+  "name": "contactmanager",
+  "version": "1.0.0",
+  "description": "A [Giraffe](https://github.com/giraffe-fsharp/Giraffe) web application, which has been created via the `dotnet new giraffe` command.",
+  "main": "index.js",
+  "scripts": {
+    "start": "dotnet restore src/BackEnd && dotnet build src/BackEnd && dotnet run --project src/BackEnd",
+    "build": "elm make src/FrontEnd/Main.elm --output src/BackEnd/WebRoot/elm.js && uglifyjs src/BackEnd/WebRoot/elm.js -o src/BackEnd/WebRoot/elm.min.js && rimraf src/BackEnd/WebRoot/elm.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "elm": "^0.18.0",
+    "rimraf": "^2.6.2",
+    "uglify-js": "^3.3.7"
+  }
+}
