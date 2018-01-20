@@ -9,15 +9,7 @@ open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open GiraffeViewEngine
-
-// ---------------------------------
-// Models
-// ---------------------------------
-
-type Message =
-    {
-        Text : string
-    }
+open ContactManager.Api 
 
 // ---------------------------------
 // Views
@@ -53,6 +45,7 @@ let webApp =
         GET >=>
             choose [
                 route "/" >=> indexHandler ()
+                routeStartsWith "/api" >=> apiHandler ()
             ]
         setStatusCode 404 >=> text "Not Found" ]
 
