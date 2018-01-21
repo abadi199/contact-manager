@@ -15,50 +15,70 @@ import Model exposing (Company)
 import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import RemoteData.Http
+import String
 import Task
 
 
-getCompanies : Cmd Msg
-getCompanies =
-    getCompaniesTask
+getCompanies : Model.Filter -> Cmd Msg
+getCompanies filter =
+    getCompaniesTask filter
         |> Task.perform GetCompaniesCompleted
 
 
-getCompaniesTask : Task.Task Never (RemoteData.WebData (List Model.Company))
-getCompaniesTask =
-    RemoteData.Http.getTask
-        "/api/company"
-        companiesDecoder
-
-
-newCompany : Company -> Cmd Msg
-newCompany newCompany =
-    RemoteData.Http.post
-        "/api/company/new"
-        (CompanyMsg << SaveCompanyCompleted)
-        companiesDecoder
-        (companyEncoder newCompany)
-
-
-updateCompany : Company -> Cmd Msg
-updateCompany company =
-    RemoteData.Http.post
-        "/api/company"
-        (CompanyMsg << SaveCompanyCompleted)
-        companiesDecoder
-        (companyEncoder company)
-
-
-deleteCompany : Int -> Cmd Msg
-deleteCompany companyId =
+getCompaniesTask : Model.Filter -> Task.Task Never (RemoteData.WebData (List Model.Company))
+getCompaniesTask filter =
     let
-        deleteTask =
-            RemoteData.Http.deleteTask
-                ("/api/company/" ++ toString companyId)
-                Json.Encode.null
+        phoneFilter =
+            if filter.phoneNumber |> String.trim |> String.isEmpty then
+                ""
+            else
+                "?phoneNumber=" ++ filter.phoneNumber
+
+        categoryKey =
+            if String.isEmpty phoneFilter then
+                "?category="
+            else
+                "&category="
+
+        categoryFilter =
+            filter.category
+                |> Maybe.map (\category -> categoryKey ++ toString category)
+                |> Maybe.withDefault ""
     in
-    deleteTask
-        |> Task.andThen (\_ -> getCompaniesTask)
+    RemoteData.Http.getTask
+        ("/api/company"
+            ++ phoneFilter
+            ++ categoryFilter
+        )
+        companiesDecoder
+
+
+newCompany : Model.Filter -> Company -> Cmd Msg
+newCompany filter newCompany =
+    RemoteData.Http.postTask
+        "/api/company/new"
+        (Json.Decode.succeed ())
+        (companyEncoder newCompany)
+        |> Task.andThen (\_ -> getCompaniesTask filter)
+        |> Task.perform (CompanyMsg << SaveCompanyCompleted)
+
+
+updateCompany : Model.Filter -> Company -> Cmd Msg
+updateCompany filter company =
+    RemoteData.Http.postTask
+        "/api/company"
+        (Json.Decode.succeed ())
+        (companyEncoder company)
+        |> Task.andThen (\_ -> getCompaniesTask filter)
+        |> Task.perform (CompanyMsg << SaveCompanyCompleted)
+
+
+deleteCompany : Model.Filter -> Int -> Cmd Msg
+deleteCompany filter companyId =
+    RemoteData.Http.deleteTask
+        ("/api/company/" ++ toString companyId)
+        Json.Encode.null
+        |> Task.andThen (\_ -> getCompaniesTask filter)
         |> Task.perform GetCompaniesCompleted
 
 
@@ -68,7 +88,7 @@ newCategory categoryMode =
         Model.NewCategory name ->
             RemoteData.Http.post
                 "/api/category/new"
-                (CompanyMsg << GetCategoriesCompleted)
+                GetCategoriesCompleted
                 (Json.Decode.list Json.categoryDecoder)
                 (Json.Encode.string name)
 
@@ -79,7 +99,7 @@ newCategory categoryMode =
 getCategories : Cmd Msg
 getCategories =
     getCategoriesTask
-        |> Task.perform (CompanyMsg << GetCategoriesCompleted)
+        |> Task.perform GetCategoriesCompleted
 
 
 getCategoriesTask : Task.Task Never (RemoteData.WebData (List Model.Category))

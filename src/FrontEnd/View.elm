@@ -14,10 +14,10 @@ import WebData exposing (WebData(..))
 view : Model -> Html Msg
 view model =
     case model of
-        CompanyListRoute { companies } ->
-            companyListView companies
+        CompanyListRoute { companies, categories, filter } ->
+            companyListView companies categories filter
 
-        CompanyRoute { companies, categories, company, categoryMode } ->
+        CompanyRoute { companies, categories, company, categoryMode, filter } ->
             companyForm companies categories categoryMode company
 
 
@@ -145,40 +145,78 @@ errorView webData =
             text ""
 
 
-companyListView : WebData (List Company) -> Html Msg
-companyListView webData =
+companyListView : WebData (List Company) -> List Category -> Model.Filter -> Html Msg
+companyListView webData categories filter =
     case webData of
         WebData.RemoteData RemoteData.NotAsked ->
-            templateView empty
+            templateView (empty categories filter)
 
         WebData.RemoteData RemoteData.Loading ->
             templateView loading
 
         WebData.RemoteData (RemoteData.Failure error) ->
-            templateView (div [] [ empty, errorView webData ])
+            templateView (div [] [ empty categories filter, errorView webData ])
 
         WebData.RemoteData (RemoteData.Success companies) ->
-            templateView (companyTableView companies)
+            templateView (companyTableView companies categories filter)
 
         WebData.FailureWithData error companies ->
-            templateView empty
+            templateView (empty categories filter)
 
         WebData.Reloading companies ->
             templateView
                 (div []
-                    [ companyTableView companies
+                    [ companyTableView companies categories filter
                     , loading
                     ]
                 )
 
 
-companyTableView : List Company -> Html Msg
-companyTableView companies =
+companySearchForm : List Category -> Model.Filter -> Html Msg
+companySearchForm categories filter =
+    let
+        categoryListItem category =
+            option
+                [ value <| toString <| Maybe.withDefault 0 <| category.id
+                , selected (filter.category == category.id)
+                ]
+                [ text category.name ]
+    in
+    fieldset [ class "form-inline" ]
+        [ legend [] [ text "Find Company" ]
+        , div [ class "form-group mb-2", style [ ( "margin-right", "2em" ) ] ]
+            [ label [ for "searchByPhone", style [ ( "margin-right", "1em" ) ] ] [ text "By Phone" ]
+            , input
+                [ class "form-control"
+                , id "searchByPhone"
+                , type_ "text"
+                , onInput SearchByPhoneUpdated
+                , value filter.phoneNumber
+                ]
+                []
+            ]
+        , div [ class "form-group mb-2", style [ ( "margin-right", "1em" ) ] ]
+            [ label [ for "searchByCategory", style [ ( "margin-right", "1em" ) ] ] [ text "By Category" ]
+            , select
+                [ class "form-control"
+                , id "searchByPhone"
+                , on "change" (Json.Decode.map (String.toInt >> Result.toMaybe >> SearchByCategoryUpdated) targetValue)
+                ]
+                (option [ value "", selected (filter.category == Nothing) ] [ text "All" ] :: (categories |> List.map categoryListItem))
+            ]
+        , button [ type_ "button", class "btn btn-primary mb-2", onClick SearchClicked, style [ ( "margin-right", "0.5em" ) ] ] [ text "Search" ]
+        , button [ type_ "button", class "btn btn-secondary mb-2", onClick ClearFilterClicked ] [ text "Clear" ]
+        ]
+
+
+companyTableView : List Company -> List Category -> Model.Filter -> Html Msg
+companyTableView companies categories filter =
     if List.isEmpty companies then
-        empty
+        empty categories filter
     else
         div []
-            [ table [ class "table" ]
+            [ companySearchForm categories filter
+            , table [ class "table" ]
                 [ thead []
                     [ tr []
                         [ th [] [ text "Id" ]
@@ -262,10 +300,11 @@ actionView companies =
         ]
 
 
-empty : Html Msg
-empty =
+empty : List Category -> Model.Filter -> Html Msg
+empty categories filter =
     div []
-        [ text "No companies found."
+        [ companySearchForm categories filter
+        , text "No companies found."
         , actionView []
         ]
 

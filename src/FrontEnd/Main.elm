@@ -20,7 +20,12 @@ main =
 
 init : ( Model, Cmd Msg )
 init =
-    ( initialModel, Api.getCompanies )
+    ( initialModel
+    , Cmd.batch
+        [ Api.getCompanies Model.emptyFilter
+        , Api.getCategories
+        ]
+    )
 
 
 subscriptions : Model -> Sub Msg

@@ -1,6 +1,6 @@
 module Msg exposing (CompanyMsg(..), Msg(..))
 
-import Model exposing (Company)
+import Model exposing (Category, Company)
 import RemoteData exposing (WebData)
 
 
@@ -11,6 +11,11 @@ type Msg
     | CompanyMsg CompanyMsg
     | DeleteCompanyClicked Int
     | EditCompanyClicked Int
+    | GetCategoriesCompleted (WebData (List Model.Category))
+    | SearchByPhoneUpdated String
+    | SearchByCategoryUpdated (Maybe Int)
+    | SearchClicked
+    | ClearFilterClicked
 
 
 type CompanyMsg
@@ -31,4 +36,3 @@ type CompanyMsg
     | SaveNewCategoryClicked
     | SaveEditCategoryClicked
     | CancelCategoryClicked
-    | GetCategoriesCompleted (WebData (List Model.Category))

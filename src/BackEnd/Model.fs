@@ -17,3 +17,8 @@ type Company() =
     member val CategoryId = 0 with get, set
     member val Category : Category = Category() with get, set
 
+
+[<CLIMutable>]
+type Filter =
+    { PhoneNumber : Option<string>
+      Category : Option<int> }

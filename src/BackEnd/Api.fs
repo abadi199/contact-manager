@@ -6,29 +6,24 @@ open Microsoft.AspNetCore.Http
 open ContactManager.Model
 
 let getCompaniesHandler (next: HttpFunc) (ctx: HttpContext) =
-    let companies = getCompanies ()
+    let filter = ctx.BindQueryString<Filter>()
+    let companies = getCompanies filter
     json companies next ctx 
 
 let newCompanyHandler (next: HttpFunc) (ctx: HttpContext) =
     task {
         let! company = ctx.BindJsonAsync<Company>() 
-        newCompany company
-        let companies = getCompanies ()
-        return! json companies next ctx 
+        return! json (newCompany company) next ctx 
     }
 
 let updateCompanyHandler (next: HttpFunc) (ctx: HttpContext) =
     task {
         let! company = ctx.BindJsonAsync<Company>() 
-        updateCompany company |> ignore
-        let companies = getCompanies ()
-        return! json companies next ctx 
+        return! json (updateCompany company) next ctx 
     }
 
 let deleteCompanyHandler (companyId: int) (next: HttpFunc) (ctx: HttpContext) =
-    deleteCompany companyId |> ignore
-    let companies = getCompanies ()
-    json companies next ctx
+    json (deleteCompany companyId) next ctx
 
 
 let companyHandler () =

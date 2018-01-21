@@ -7,19 +7,33 @@ open ContactManager.Model
 
 let private connString = "Filename=" + Path.Combine(Directory.GetCurrentDirectory (), "ContactManager.db")
 
-let getCompanies () =
+let getCompanies (filter: Filter)=
     use conn = new SqliteConnection(connString) 
     conn.Open ()
     use db = new Database(conn)
     let categories = 
-        db.Fetch<Category>() 
+        db.Fetch<Category> () 
             |> Seq.groupBy (fun category -> category.Id)
             |> Seq.map (fun (id, list) -> (id, Seq.head list))
             |> dict
+    let companies = 
+        db.Fetch<Company>(@"select Id, Name, Address1, Address2, City, State, ZipCode, PhoneNumber, FaxNumber, CategoryId from Company") 
 
-    let companies = db.Fetch<Company>(@"select Id, Name, Address1, Address2, City, State, ZipCode, PhoneNumber, FaxNumber, CategoryId from Company")
+    let applyPhoneFilter = 
+        fun companies -> 
+            match filter.PhoneNumber with 
+            | None -> companies 
+            | Some phoneNumber -> companies |> Seq.where (fun (company: Company) -> company.PhoneNumber.StartsWith(phoneNumber)  )    
+
+    let applyCategoryFilter = 
+        fun companies -> 
+            match filter.Category with 
+            | None -> companies 
+            | Some categoryId -> companies |> Seq.where (fun (company: Company) -> company.CategoryId = categoryId )    
     
     companies 
+        |> applyPhoneFilter 
+        |> applyCategoryFilter 
         |> Seq.map (fun company -> 
             company.Category <- categories.Item(company.CategoryId)
             company
@@ -28,8 +42,8 @@ let getCompanies () =
 let newCompany (newCompany: Company) =
     use conn = new SqliteConnection(connString) 
     conn.Open ()
-    use txn: SqliteTransaction = conn.BeginTransaction()
-    let cmd = conn.CreateCommand()
+    use txn: SqliteTransaction = conn.BeginTransaction ()
+    let cmd = conn.CreateCommand ()
     cmd.Transaction <- txn
     cmd.CommandText <- @"
 insert into Company(Name, Address1, Address2, City, State, ZipCode, PhoneNumber, FaxNumber, CategoryId) 
@@ -80,9 +94,13 @@ where Id = $CompanyId"
 let deleteCompany (companyId: int) =
     use conn = new SqliteConnection(connString)
     conn.Open ()
-    use db = new Database(conn)
-    let company = db.SingleById<Company>(companyId)
-    db.Delete(company)
+    use txn: SqliteTransaction = conn.BeginTransaction()
+    let cmd = conn.CreateCommand()
+    cmd.Transaction <- txn
+    cmd.CommandText <- "delete from Company where Id = $Id"
+    cmd.Parameters.AddWithValue("$Id", companyId) |> ignore
+    cmd.ExecuteNonQuery () |> ignore
+    txn.Commit ()
 
 let getCategories () =
     use conn = new SqliteConnection(connString)

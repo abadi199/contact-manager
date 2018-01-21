@@ -3,8 +3,12 @@ module Model
         ( Category
         , CategoryMode(..)
         , Company
+        , CompanyListRouteData
+        , CompanyRouteData
+        , Filter
         , Model
         , Route(..)
+        , emptyFilter
         , initialModel
         , newCompany
         )
@@ -14,8 +18,22 @@ import WebData exposing (WebData)
 
 
 type Route
-    = CompanyListRoute { companies : WebData (List Company) }
-    | CompanyRoute { companies : WebData (List Company), company : Company, categories : List Category, categoryMode : CategoryMode }
+    = CompanyListRoute CompanyListRouteData
+    | CompanyRoute CompanyRouteData
+
+
+type alias CompanyListRouteData =
+    { companies : WebData (List Company), categories : List Category, filter : Filter }
+
+
+type alias CompanyRouteData =
+    { companies : WebData (List Company), company : Company, categories : List Category, categoryMode : CategoryMode, filter : Filter }
+
+
+type alias Filter =
+    { phoneNumber : String
+    , category : Maybe Int
+    }
 
 
 type CategoryMode
@@ -58,7 +76,16 @@ newCompany =
 
 initialModel : Model
 initialModel =
-    CompanyListRoute { companies = WebData.RemoteData RemoteData.Loading }
+    CompanyListRoute
+        { companies = WebData.RemoteData RemoteData.Loading
+        , categories = []
+        , filter = emptyFilter
+        }
+
+
+emptyFilter : Filter
+emptyFilter =
+    { phoneNumber = "", category = Nothing }
 
 
 type alias Category =
