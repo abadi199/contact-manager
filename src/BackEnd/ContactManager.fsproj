@@ -5,9 +5,8 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Company.fs" />
+    <Compile Include="Model.fs" />
     <Compile Include="Repository.fs" />
-    <Compile Include="Contact.fs" />
     <Compile Include="Api.fs" />
     <Compile Include="Program.fs" />
     <Content Include="WebRoot/**/*">

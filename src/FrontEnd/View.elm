@@ -7,6 +7,7 @@ import Json.Decode
 import Model exposing (Category, Company, Model, Route(..))
 import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
+import String
 import WebData exposing (WebData(..))
 
 
@@ -25,10 +26,9 @@ companyForm companies categories categoryMode company =
     templateView
         (Html.form []
             [ h2 []
-                [ if Model.isNewCompany company then
-                    text "New Company"
-                  else
-                    text "Edit Company"
+                [ company.id
+                    |> Maybe.map (always <| text "Edit Company")
+                    |> Maybe.withDefault (text "New Company")
                 ]
             , div [ class "form-group" ]
                 [ label [ for "name" ] [ text "Name" ]
@@ -92,12 +92,36 @@ categoryDropdown company categories categoryMode =
     let
         options =
             categories
-                |> List.map (\category -> option [ value category, selected (category == company.category) ] [ text category ])
+                |> List.map
+                    (\category ->
+                        option
+                            [ value <| Maybe.withDefault "" <| Maybe.map toString <| category.id
+                            , selected (company.category |> Maybe.map .id |> Maybe.map ((==) category.id) |> Maybe.withDefault False)
+                            ]
+                            [ text category.name ]
+                    )
+
+        findCategory categoryId =
+            categories
+                |> List.filter (\category -> category.id == Just categoryId)
+                |> List.head
+
+        toCategory categoryIdString =
+            categoryIdString
+                |> String.toInt
+                |> Result.toMaybe
+                |> Maybe.andThen findCategory
     in
     case categoryMode of
         Model.SelectCategory ->
             div []
-                [ select [ style [ ( "margin-bottom", "0.5em" ) ], id "category", class "form-control", on "change" (Json.Decode.map (CompanyMsg << CategoryUpdated) targetValue) ] options
+                [ select
+                    [ style [ ( "margin-bottom", "0.5em" ) ]
+                    , id "category"
+                    , class "form-control"
+                    , on "change" (Json.Decode.map (toCategory >> CategoryUpdated >> CompanyMsg) targetValue)
+                    ]
+                    options
                 , button [ class "btn", type_ "button", onClick (CompanyMsg NewCategoryClicked) ] [ text "New" ]
                 ]
 
@@ -131,7 +155,7 @@ companyListView webData =
             templateView loading
 
         WebData.RemoteData (RemoteData.Failure error) ->
-            templateView empty
+            templateView (div [] [ empty, errorView webData ])
 
         WebData.RemoteData (RemoteData.Success companies) ->
             templateView (companyTableView companies)
@@ -196,7 +220,7 @@ companyRowView company =
                 ]
     in
     tr []
-        [ td [] [ text <| Maybe.withDefault "" <| Maybe.map toString <| Model.companyId <| company ]
+        [ td [] [ text <| Maybe.withDefault "" <| Maybe.map toString <| company.id ]
         , td [] [ text company.name ]
         , td [] [ text company.address1, br [] [], text company.address2 ]
         , td [] [ text company.city ]
@@ -204,9 +228,8 @@ companyRowView company =
         , td [] [ text company.zipCode ]
         , td [] [ text company.phoneNumber ]
         , td [] [ text company.faxNumber ]
-        , td [] [ text company.category ]
-        , company
-            |> Model.companyId
+        , td [] [ text (company.category |> Maybe.map .name |> Maybe.withDefault "") ]
+        , company.id
             |> Maybe.map actionButtons
             |> Maybe.withDefault (text "")
         ]

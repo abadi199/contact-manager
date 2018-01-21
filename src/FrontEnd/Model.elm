@@ -3,12 +3,9 @@ module Model
         ( Category
         , CategoryMode(..)
         , Company
-        , CompanyId(..)
         , Model
         , Route(..)
-        , companyId
         , initialModel
-        , isNewCompany
         , newCompany
         )
 
@@ -30,23 +27,8 @@ type alias Model =
     Route
 
 
-type CompanyId
-    = NewCompany
-    | CompanyId Int
-
-
-isNewCompany : Company -> Bool
-isNewCompany company =
-    case company.id of
-        NewCompany ->
-            True
-
-        CompanyId _ ->
-            False
-
-
 type alias Company =
-    { id : CompanyId
+    { id : Maybe Int
     , name : String
     , address1 : String
     , address2 : String
@@ -55,23 +37,13 @@ type alias Company =
     , zipCode : String
     , phoneNumber : String
     , faxNumber : String
-    , category : String
+    , category : Maybe Category
     }
-
-
-companyId : Company -> Maybe Int
-companyId company =
-    case company.id of
-        NewCompany ->
-            Nothing
-
-        CompanyId id ->
-            Just id
 
 
 newCompany : Company
 newCompany =
-    { id = NewCompany
+    { id = Nothing
     , name = ""
     , address1 = ""
     , address2 = ""
@@ -80,7 +52,7 @@ newCompany =
     , zipCode = ""
     , phoneNumber = ""
     , faxNumber = ""
-    , category = ""
+    , category = Nothing
     }
 
 
@@ -90,4 +62,6 @@ initialModel =
 
 
 type alias Category =
-    String
+    { id : Maybe Int
+    , name : String
+    }

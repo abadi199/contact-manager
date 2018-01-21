@@ -1,4 +1,8 @@
-module ContactManager.Company
+module ContactManager.Model
+
+type Category() =
+    member val Id = 0 with get, set
+    member val Name = "" with get, set
 
 type Company() =
     member val Id = 0 with get, set
@@ -10,7 +14,6 @@ type Company() =
     member val ZipCode = "" with get, set
     member val PhoneNumber = "" with get, set
     member val FaxNumber = "" with get, set
-    member val Category = "" with get, set
+    member val CategoryId = 0 with get, set
+    member val Category : Category = Category() with get, set
 
-type Category() =
-    member val Name = "" with get, set

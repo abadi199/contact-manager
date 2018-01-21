@@ -69,7 +69,7 @@ newCategory categoryMode =
             RemoteData.Http.post
                 "/api/category/new"
                 (CompanyMsg << GetCategoriesCompleted)
-                (Json.Decode.list Json.Decode.string)
+                (Json.Decode.list Json.categoryDecoder)
                 (Json.Encode.string name)
 
         _ ->
@@ -86,4 +86,4 @@ getCategoriesTask : Task.Task Never (RemoteData.WebData (List Model.Category))
 getCategoriesTask =
     RemoteData.Http.getTask
         "/api/category"
-        (Json.Decode.list Json.Decode.string)
+        (Json.Decode.list Json.categoryDecoder)

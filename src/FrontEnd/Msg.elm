@@ -25,7 +25,7 @@ type CompanyMsg
     | ZipCodeUpdated String
     | PhoneNumberUpdated String
     | FaxNumberUpdated String
-    | CategoryUpdated String
+    | CategoryUpdated (Maybe Model.Category)
     | NewCategoryClicked
     | CategoryNameUpdated String
     | SaveNewCategoryClicked

@@ -69,7 +69,7 @@ editCompany companyId companies =
     let
         findCompany companyList =
             companyList
-                |> List.filter (\company -> company.id == Model.CompanyId companyId)
+                |> List.filter (\company -> company.id == Just companyId)
                 |> List.head
     in
     companies
@@ -160,8 +160,8 @@ updateCompanyRoute msg companies categories categoryMode company =
 
         GetCategoriesCompleted webData ->
             case webData of
-                RemoteData.Success data ->
-                    ( companyRoute companies data company, Cmd.none )
+                RemoteData.Success newCategories ->
+                    ( companyRoute companies newCategories { company | category = newCategories |> List.head }, Cmd.none )
 
                 RemoteData.Failure error ->
                     ( companyRoute (WebData.error error companies) categories company, Cmd.none )
@@ -181,8 +181,7 @@ saveCompany companies categories company =
         ( companyRoute (companies |> WebData.error (Http.BadUrl "Name is required")) categories company, Cmd.none )
     else
         ( companyRoute (companies |> WebData.loading) categories company
-        , if Model.isNewCompany company then
-            Api.newCompany company
-          else
-            Api.updateCompany company
+        , company.id
+            |> Maybe.map (always (Api.updateCompany company))
+            |> Maybe.withDefault (Api.newCompany company)
         )

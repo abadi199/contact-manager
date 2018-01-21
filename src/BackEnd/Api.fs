@@ -2,9 +2,8 @@ module ContactManager.Api
 
 open Giraffe
 open ContactManager.Repository
-open ContactManager.Contact
 open Microsoft.AspNetCore.Http
-open ContactManager.Company
+open ContactManager.Model
 
 let getCompaniesHandler (next: HttpFunc) (ctx: HttpContext) =
     let companies = getCompanies ()
@@ -47,14 +46,14 @@ let companyHandler () =
     ]
 
 let getCategoriesHandler (next: HttpFunc) (ctx: HttpContext) =
-    let categories = getCategories () |> Seq.map (fun category -> category.Name)
+    let categories = getCategories () 
     json categories next ctx
 
 let newCategoryHandler (next: HttpFunc) (ctx: HttpContext) =
     task {
         let! categoryName = ctx.BindJsonAsync<string>() 
         newCategory categoryName
-        let categories = getCategories () |> Seq.map (fun category -> category.Name)
+        let categories = getCategories ()
         return! json categories next ctx 
     }
 

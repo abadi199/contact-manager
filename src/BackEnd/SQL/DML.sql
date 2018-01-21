@@ -9,10 +9,12 @@ CREATE TABLE Company(
     ZipCode nvarchar (128) NOT NULL,  
     PhoneNumber nvarchar (128) NOT NULL,  
     FaxNumber nvarchar (128) NOT NULL,  
-    Category nvarchar (128) NOT NULL
+    CategoryId integer NOT NULL,
+    FOREIGN KEY(CategoryId) REFERENCES Category(Id)
 );
 
 DROP TABLE IF EXISTS Category;
 CREATE TABLE Category(
-    [Name] nvarchar (128) PRIMARY KEY NOT NULL
+    Id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+    [Name] nvarchar (128) NOT NULL
 )

@@ -1,9 +1,14 @@
-module Json exposing (companiesDecoder, companyEncoder)
+module Json
+    exposing
+        ( categoryDecoder
+        , companiesDecoder
+        , companyEncoder
+        )
 
 import Json.Decode exposing (..)
 import Json.Decode.Pipeline exposing (..)
 import Json.Encode
-import Model exposing (Company)
+import Model exposing (Category, Company)
 
 
 companiesDecoder : Decoder (List Company)
@@ -14,7 +19,7 @@ companiesDecoder =
 companyDecoder : Decoder Company
 companyDecoder =
     decode Company
-        |> required "id" (Json.Decode.map Model.CompanyId int)
+        |> required "id" (Json.Decode.map Just int)
         |> required "name" string
         |> required "address1" string
         |> required "address2" string
@@ -23,13 +28,13 @@ companyDecoder =
         |> required "zipCode" string
         |> required "phoneNumber" string
         |> required "faxNumber" string
-        |> required "category" string
+        |> required "category" (Json.Decode.map Just categoryDecoder)
 
 
 companyEncoder : Company -> Json.Encode.Value
 companyEncoder company =
     Json.Encode.object
-        [ ( "id", companyIdEncoder company.id )
+        [ ( "id", Json.Encode.int <| Maybe.withDefault 0 <| company.id )
         , ( "name", Json.Encode.string company.name )
         , ( "address1", Json.Encode.string company.address1 )
         , ( "address2", Json.Encode.string company.address2 )
@@ -38,15 +43,12 @@ companyEncoder company =
         , ( "zipCode", Json.Encode.string company.zipCode )
         , ( "phoneNumber", Json.Encode.string company.phoneNumber )
         , ( "faxNumber", Json.Encode.string company.faxNumber )
-        , ( "category", Json.Encode.string company.category )
+        , ( "categoryId", Json.Encode.int <| Maybe.withDefault 0 <| Maybe.andThen .id <| company.category )
         ]
 
 
-companyIdEncoder : Model.CompanyId -> Json.Encode.Value
-companyIdEncoder companyId =
-    case companyId of
-        Model.NewCompany ->
-            Json.Encode.int 0
-
-        Model.CompanyId id ->
-            Json.Encode.int id
+categoryDecoder : Decoder Category
+categoryDecoder =
+    decode Category
+        |> required "id" (Json.Decode.map Just int)
+        |> required "name" string
