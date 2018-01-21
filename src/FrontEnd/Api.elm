@@ -1,9 +1,15 @@
-module Api exposing (deleteCompany, getCompanies, newCompany)
+module Api
+    exposing
+        ( deleteCompany
+        , getCompanies
+        , newCompany
+        , updateCompany
+        )
 
-import Json exposing (companiesDecoder, newCompanyEncoder)
+import Json exposing (companiesDecoder, companyEncoder)
 import Json.Encode
-import Model exposing (NewCompany)
-import Msg exposing (Msg(..), NewCompanyMsg(..))
+import Model exposing (Company)
+import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import RemoteData.Http
 import Task
@@ -22,13 +28,22 @@ getCompaniesTask =
         companiesDecoder
 
 
-newCompany : NewCompany -> Cmd Msg
+newCompany : Company -> Cmd Msg
 newCompany newCompany =
     RemoteData.Http.post
         "/api/company/new"
-        (NewCompanyMsg << SaveNewCompanyCompleted)
+        (CompanyMsg << SaveCompanyCompleted)
         companiesDecoder
-        (newCompanyEncoder newCompany)
+        (companyEncoder newCompany)
+
+
+updateCompany : Company -> Cmd Msg
+updateCompany company =
+    RemoteData.Http.post
+        "/api/company"
+        (CompanyMsg << SaveCompanyCompleted)
+        companiesDecoder
+        (companyEncoder company)
 
 
 deleteCompany : Int -> Cmd Msg

@@ -2,8 +2,8 @@ module Update exposing (update)
 
 import Api
 import Http
-import Model exposing (Company, Model, NewCompany, Route(..))
-import Msg exposing (Msg(..), NewCompanyMsg(..))
+import Model exposing (Company, Model, Route(..))
+import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import WebData exposing (WebData)
 
@@ -14,15 +14,15 @@ update msg model =
         CompanyListRoute { companies } ->
             updateCompanyListRoute msg companies
 
-        NewCompanyRoute { companies, newCompany } ->
+        CompanyRoute { companies, company } ->
             case msg of
-                NewCompanyMsg newCompanyMsg ->
-                    updateNewCompanyRoute newCompanyMsg companies newCompany
+                CompanyMsg companyMsg ->
+                    updateCompanyRoute companyMsg companies company
 
                 _ ->
-                    ( NewCompanyRoute
+                    ( CompanyRoute
                         { companies = WebData.error (Http.BadUrl "InvalidSate") companies
-                        , newCompany = newCompany
+                        , company = company
                         }
                     , Cmd.none
                     )
@@ -38,9 +38,9 @@ updateCompanyListRoute msg companies =
             ( CompanyListRoute { companies = WebData.RemoteData webData }, Cmd.none )
 
         NewCompanyClicked companies ->
-            ( NewCompanyRoute
+            ( CompanyRoute
                 { companies = WebData.RemoteData (RemoteData.Success companies)
-                , newCompany = Model.newCompany
+                , company = Model.newCompany
                 }
             , Cmd.none
             )
@@ -50,67 +50,90 @@ updateCompanyListRoute msg companies =
             , Api.deleteCompany companyId
             )
 
-        NewCompanyMsg newCompanyMsg ->
+        EditCompanyClicked companyId ->
+            ( editCompany companyId companies
+            , Cmd.none
+            )
+
+        CompanyMsg _ ->
             ( CompanyListRoute { companies = WebData.error (Http.BadUrl "Invalid State") companies }, Cmd.none )
 
 
-updateNewCompanyRoute : NewCompanyMsg -> WebData (List Company) -> NewCompany -> ( Route, Cmd Msg )
-updateNewCompanyRoute msg companies newCompany =
+editCompany : Int -> WebData (List Company) -> Route
+editCompany companyId companies =
+    let
+        findCompany companyList =
+            companyList
+                |> List.filter (\company -> company.id == Model.CompanyId companyId)
+                |> List.head
+    in
+    companies
+        |> WebData.toMaybe
+        |> Maybe.andThen findCompany
+        |> Maybe.map (\company -> CompanyRoute { companies = companies, company = company })
+        |> Maybe.withDefault (CompanyListRoute { companies = companies })
+
+
+updateCompanyRoute : CompanyMsg -> WebData (List Company) -> Company -> ( Route, Cmd Msg )
+updateCompanyRoute msg companies company =
     case msg of
-        CancelNewCompanyClicked ->
+        CancelCompanyClicked ->
             ( CompanyListRoute { companies = companies }, Cmd.none )
 
-        SaveNewCompanyClicked ->
-            saveNewCompany companies newCompany
+        SaveCompanyClicked ->
+            saveCompany companies company
 
         NameUpdated value ->
-            ( { newCompany | name = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | name = value } |> companyRoute companies, Cmd.none )
 
         Address1Updated value ->
-            ( { newCompany | address1 = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | address1 = value } |> companyRoute companies, Cmd.none )
 
         Address2Updated value ->
-            ( { newCompany | address2 = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | address2 = value } |> companyRoute companies, Cmd.none )
 
         CityUpdated value ->
-            ( { newCompany | city = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | city = value } |> companyRoute companies, Cmd.none )
 
         StateUpdated value ->
-            ( { newCompany | state = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | state = value } |> companyRoute companies, Cmd.none )
 
         ZipCodeUpdated value ->
-            ( { newCompany | zipCode = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | zipCode = value } |> companyRoute companies, Cmd.none )
 
         PhoneNumberUpdated value ->
-            ( { newCompany | phoneNumber = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | phoneNumber = value } |> companyRoute companies, Cmd.none )
 
         FaxNumberUpdated value ->
-            ( { newCompany | faxNumber = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | faxNumber = value } |> companyRoute companies, Cmd.none )
 
         CategoryUpdated value ->
-            ( { newCompany | category = value } |> newCompanyRoute companies, Cmd.none )
+            ( { company | category = value } |> companyRoute companies, Cmd.none )
 
-        SaveNewCompanyCompleted webData ->
+        SaveCompanyCompleted webData ->
             case webData of
                 RemoteData.Success companies ->
                     ( CompanyListRoute { companies = WebData.RemoteData (RemoteData.Success companies) }, Cmd.none )
 
                 RemoteData.Failure error ->
-                    ( newCompanyRoute (WebData.error error companies) newCompany
+                    ( companyRoute (WebData.error error companies) company
                     , Cmd.none
                     )
 
                 _ ->
-                    ( newCompanyRoute companies newCompany, Cmd.none )
+                    ( companyRoute companies company, Cmd.none )
 
 
-newCompanyRoute : WebData (List Company) -> NewCompany -> Route
-newCompanyRoute companies newCompany =
-    NewCompanyRoute { companies = companies, newCompany = newCompany }
+companyRoute : WebData (List Company) -> Company -> Route
+companyRoute companies company =
+    CompanyRoute { companies = companies, company = company }
 
 
-saveNewCompany : WebData (List Company) -> NewCompany -> ( Route, Cmd Msg )
-saveNewCompany companies newCompany =
-    ( newCompanyRoute (companies |> WebData.loading) newCompany
-    , Api.newCompany newCompany
+saveCompany : WebData (List Company) -> Company -> ( Route, Cmd Msg )
+saveCompany companies company =
+    ( companyRoute (companies |> WebData.loading) company
+    , if Model.isNewCompany company then
+        Api.newCompany company
+      else
+        Api.updateCompany company
     )

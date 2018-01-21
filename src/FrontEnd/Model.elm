@@ -1,10 +1,12 @@
 module Model
     exposing
         ( Company
+        , CompanyId(..)
         , Model
-        , NewCompany
         , Route(..)
+        , companyId
         , initialModel
+        , isNewCompany
         , newCompany
         )
 
@@ -14,15 +16,30 @@ import WebData exposing (WebData)
 
 type Route
     = CompanyListRoute { companies : WebData (List Company) }
-    | NewCompanyRoute { companies : WebData (List Company), newCompany : NewCompany }
+    | CompanyRoute { companies : WebData (List Company), company : Company }
 
 
 type alias Model =
     Route
 
 
+type CompanyId
+    = NewCompany
+    | CompanyId Int
+
+
+isNewCompany : Company -> Bool
+isNewCompany company =
+    case company.id of
+        NewCompany ->
+            True
+
+        CompanyId _ ->
+            False
+
+
 type alias Company =
-    { id : Int
+    { id : CompanyId
     , name : String
     , address1 : String
     , address2 : String
@@ -35,22 +52,20 @@ type alias Company =
     }
 
 
-type alias NewCompany =
-    { name : String
-    , address1 : String
-    , address2 : String
-    , city : String
-    , state : String
-    , zipCode : String
-    , phoneNumber : String
-    , faxNumber : String
-    , category : String
-    }
+companyId : Company -> Maybe Int
+companyId company =
+    case company.id of
+        NewCompany ->
+            Nothing
+
+        CompanyId id ->
+            Just id
 
 
-newCompany : NewCompany
+newCompany : Company
 newCompany =
-    { name = ""
+    { id = NewCompany
+    , name = ""
     , address1 = ""
     , address2 = ""
     , city = ""

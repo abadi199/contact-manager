@@ -32,6 +32,12 @@ let newCompany (newCompany: Company) =
     cmd.ExecuteNonQuery () |> ignore
     txn.Commit ()
 
+let updateCompany (company: Company) =
+    use conn = new SqliteConnection(connString) 
+    conn.Open ()
+    use db = new Database(conn)
+    db.Update(company)
+
 let deleteCompany (companyId: int) =
     use conn = new SqliteConnection(connString)
     conn.Open ()

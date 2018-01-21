@@ -3,8 +3,8 @@ module View exposing (view)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Model exposing (Company, Model, NewCompany, Route(..))
-import Msg exposing (Msg(..), NewCompanyMsg(..))
+import Model exposing (Company, Model, Route(..))
+import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import WebData exposing (WebData(..))
 
@@ -15,58 +15,55 @@ view model =
         CompanyListRoute { companies } ->
             companyListView companies
 
-        NewCompanyRoute { companies, newCompany } ->
-            newCompanyView companies newCompany
+        CompanyRoute { companies, company } ->
+            companyView companies company
 
 
-newCompanyView : WebData (List Company) -> NewCompany -> Html Msg
-newCompanyView companies newCompany =
+companyView : WebData (List Company) -> Company -> Html Msg
+companyView companies company =
     templateView
         (Html.form []
-            [ h2 [] [ text "New Company" ]
+            [ h2 []
+                [ if Model.isNewCompany company then
+                    text "New Company"
+                  else
+                    text "Edit Company"
+                ]
             , div [ class "form-group" ]
-                [ label [ for "name" ]
-                    [ text "Name" ]
-                , input
-                    [ id "name"
-                    , class "form-control"
-                    , type_ "text"
-                    , onInput (NewCompanyMsg << NameUpdated)
-                    , required True
-                    ]
-                    []
+                [ label [ for "name" ] [ text "Name" ]
+                , input [ id "name", class "form-control", type_ "text", onInput (CompanyMsg << NameUpdated), required True, value company.name ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "address1" ] [ text "Address Line 1" ]
-                , input [ class "form-control", type_ "text", onInput (NewCompanyMsg << Address1Updated) ] []
+                , input [ class "form-control", type_ "text", onInput (CompanyMsg << Address1Updated), value company.address1 ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "address2" ] [ text "Address Line 2" ]
-                , input [ id "address2", class "form-control", type_ "text", onInput (NewCompanyMsg << Address2Updated) ] []
+                , input [ id "address2", class "form-control", type_ "text", onInput (CompanyMsg << Address2Updated), value company.address2, value company.address2 ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "city" ] [ text "City" ]
-                , input [ id "city", class "form-control", type_ "text", onInput (NewCompanyMsg << CityUpdated) ] []
+                , input [ id "city", class "form-control", type_ "text", onInput (CompanyMsg << CityUpdated), value company.city ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "state" ] [ text "State" ]
-                , input [ id "state", class "form-control", type_ "text", onInput (NewCompanyMsg << StateUpdated) ] []
+                , input [ id "state", class "form-control", type_ "text", onInput (CompanyMsg << StateUpdated), value company.state ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "zipCode" ] [ text "Zip Code" ]
-                , input [ id "zipCode", class "form-control", type_ "text", onInput (NewCompanyMsg << ZipCodeUpdated) ] []
+                , input [ id "zipCode", class "form-control", type_ "text", onInput (CompanyMsg << ZipCodeUpdated), value company.zipCode ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "phoneNumber" ] [ text "Phone Number" ]
-                , input [ id "phoneNumber", class "form-control", type_ "text", onInput (NewCompanyMsg << PhoneNumberUpdated) ] []
+                , input [ id "phoneNumber", class "form-control", type_ "text", onInput (CompanyMsg << PhoneNumberUpdated), value company.phoneNumber ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "faxNumber" ] [ text "Fax Number" ]
-                , input [ id "faxNumber", class "form-control", type_ "text", onInput (NewCompanyMsg << FaxNumberUpdated) ] []
+                , input [ id "faxNumber", class "form-control", type_ "text", onInput (CompanyMsg << FaxNumberUpdated), value company.faxNumber ] []
                 ]
             , div [ class "form-group" ]
                 [ label [ for "category" ] [ text "Category" ]
-                , input [ id "category", class "form-control", type_ "text", onInput (NewCompanyMsg << CategoryUpdated) ] []
+                , input [ id "category", class "form-control", type_ "text", onInput (CompanyMsg << CategoryUpdated), value company.category ] []
                 ]
             , errorView companies
             , div [ class "card" ]
@@ -74,7 +71,7 @@ newCompanyView companies newCompany =
                     [ button
                         [ type_ "button"
                         , class "btn btn-secondary"
-                        , onClick (NewCompanyMsg CancelNewCompanyClicked)
+                        , onClick (CompanyMsg CancelCompanyClicked)
                         , disabled (WebData.isLoading companies)
                         ]
                         [ text "Cancel" ]
@@ -82,7 +79,7 @@ newCompanyView companies newCompany =
                     , if WebData.isLoading companies then
                         button [ class "btn btn-primary", type_ "button", disabled True ] [ text "Saving..." ]
                       else
-                        button [ class "btn btn-primary", type_ "button", onClick (NewCompanyMsg SaveNewCompanyClicked) ] [ text "Save" ]
+                        button [ class "btn btn-primary", type_ "button", onClick (CompanyMsg SaveCompanyClicked) ] [ text "Save" ]
                     ]
                 ]
             ]
@@ -156,8 +153,26 @@ companyTableView companies =
 
 companyRowView : Company -> Html Msg
 companyRowView company =
+    let
+        actionButtons id =
+            td []
+                [ button
+                    [ class "btn btn-danger btn-sm"
+                    , type_ "button"
+                    , onClick (DeleteCompanyClicked id)
+                    ]
+                    [ text "Delete" ]
+                , text " "
+                , button
+                    [ class "btn btn-secondary btn-sm"
+                    , type_ "button"
+                    , onClick (EditCompanyClicked id)
+                    ]
+                    [ text "Edit" ]
+                ]
+    in
     tr []
-        [ td [] [ text <| toString company.id ]
+        [ td [] [ text <| Maybe.withDefault "" <| Maybe.map toString <| Model.companyId <| company ]
         , td [] [ text company.name ]
         , td [] [ text company.address1, br [] [], text company.address2 ]
         , td [] [ text company.city ]
@@ -166,14 +181,10 @@ companyRowView company =
         , td [] [ text company.phoneNumber ]
         , td [] [ text company.faxNumber ]
         , td [] [ text company.category ]
-        , td []
-            [ button
-                [ class "btn btn-danger btn-sm"
-                , type_ "button"
-                , onClick (DeleteCompanyClicked company.id)
-                ]
-                [ text "Delete" ]
-            ]
+        , company
+            |> Model.companyId
+            |> Maybe.map actionButtons
+            |> Maybe.withDefault (text "")
         ]
 
 

@@ -7,6 +7,7 @@ module WebData
         , isLoading
         , loading
         , map
+        , toMaybe
         )
 
 import Http

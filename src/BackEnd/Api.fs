@@ -18,6 +18,14 @@ let newCompanyHandler (next: HttpFunc) (ctx: HttpContext) =
         return! json companies next ctx 
     }
 
+let updateCompanyHandler (next: HttpFunc) (ctx: HttpContext) =
+    task {
+        let! company = ctx.BindJsonAsync<Company>() 
+        updateCompany company |> ignore
+        let companies = getCompanies ()
+        return! json companies next ctx 
+    }
+
 let deleteCompanyHandler (companyId: int) (next: HttpFunc) (ctx: HttpContext) =
     deleteCompany companyId |> ignore
     let companies = getCompanies ()
@@ -31,6 +39,7 @@ let companyHandler () =
         ]
         POST >=> choose [ 
             route "/api/company/new" >=> newCompanyHandler 
+            route "/api/company" >=> updateCompanyHandler 
         ]
         DELETE >=> choose [
             routef "/api/company/%i" deleteCompanyHandler
