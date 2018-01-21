@@ -14,28 +14,28 @@ companiesDecoder =
 companyDecoder : Decoder Company
 companyDecoder =
     decode Company
-        |> required "Id" int
-        |> required "Name" string
-        |> required "Address1" string
-        |> required "Address2" string
-        |> required "City" string
-        |> required "State" string
-        |> required "ZipCode" string
-        |> required "PhoneNumber" string
-        |> required "FaxNumber" string
-        |> required "Category" string
+        |> required "id" int
+        |> required "name" string
+        |> required "address1" string
+        |> required "address2" string
+        |> required "city" string
+        |> required "state" string
+        |> required "zipCode" string
+        |> required "phoneNumber" string
+        |> required "faxNumber" string
+        |> required "category" string
 
 
 newCompanyEncoder : NewCompany -> Json.Encode.Value
 newCompanyEncoder newCompany =
     Json.Encode.object
-        [ ( "Name", Json.Encode.string newCompany.name )
-        , ( "Address1", Json.Encode.string newCompany.address1 )
-        , ( "Address2", Json.Encode.string newCompany.address2 )
-        , ( "City", Json.Encode.string newCompany.city )
-        , ( "State", Json.Encode.string newCompany.state )
-        , ( "ZipCode", Json.Encode.string newCompany.zipCode )
-        , ( "PhoneNumber", Json.Encode.string newCompany.phoneNumber )
-        , ( "FaxNumber", Json.Encode.string newCompany.faxNumber )
-        , ( "Category", Json.Encode.string newCompany.category )
+        [ ( "name", Json.Encode.string newCompany.name )
+        , ( "address1", Json.Encode.string newCompany.address1 )
+        , ( "address2", Json.Encode.string newCompany.address2 )
+        , ( "city", Json.Encode.string newCompany.city )
+        , ( "state", Json.Encode.string newCompany.state )
+        , ( "zipCode", Json.Encode.string newCompany.zipCode )
+        , ( "phoneNumber", Json.Encode.string newCompany.phoneNumber )
+        , ( "faxNumber", Json.Encode.string newCompany.faxNumber )
+        , ( "category", Json.Encode.string newCompany.category )
         ]

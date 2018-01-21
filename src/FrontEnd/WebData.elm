@@ -2,6 +2,7 @@ module WebData
     exposing
         ( WebData(..)
         , error
+        , getErrorMessage
         , isFailure
         , isLoading
         , loading
@@ -127,3 +128,44 @@ isFailure webData =
 
         RemoteData RemoteData.NotAsked ->
             False
+
+
+getErrorMessage : WebData a -> Maybe String
+getErrorMessage webData =
+    case webData of
+        Reloading a ->
+            Nothing
+
+        FailureWithData e a ->
+            Just (getHttpErrorMessage e)
+
+        RemoteData (RemoteData.Success a) ->
+            Nothing
+
+        RemoteData (RemoteData.Failure e) ->
+            Just (getHttpErrorMessage e)
+
+        RemoteData RemoteData.Loading ->
+            Nothing
+
+        RemoteData RemoteData.NotAsked ->
+            Nothing
+
+
+getHttpErrorMessage : Http.Error -> String
+getHttpErrorMessage error =
+    case error of
+        Http.BadUrl str ->
+            str
+
+        Http.NetworkError ->
+            "A network error has occured."
+
+        Http.Timeout ->
+            "It took too long for the server to respond."
+
+        Http.BadStatus response ->
+            response.status.message
+
+        Http.BadPayload str response ->
+            str

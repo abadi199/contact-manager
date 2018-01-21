@@ -22,88 +22,82 @@ view model =
 newCompanyView : WebData (List Company) -> NewCompany -> Html Msg
 newCompanyView companies newCompany =
     templateView
-        (div []
+        (Html.form []
             [ h2 [] [ text "New Company" ]
-            , div []
-                [ label []
-                    [ text "Name"
-                    , input
-                        [ type_ "text"
-                        , onInput (NewCompanyMsg << NameUpdated)
-                        , required True
-                        ]
-                        []
+            , div [ class "form-group" ]
+                [ label [ for "name" ]
+                    [ text "Name" ]
+                , input
+                    [ id "name"
+                    , class "form-control"
+                    , type_ "text"
+                    , onInput (NewCompanyMsg << NameUpdated)
+                    , required True
                     ]
+                    []
                 ]
-            , div []
-                [ label []
-                    [ text "Address Line 1"
-                    , input [ type_ "text", onInput (NewCompanyMsg << Address1Updated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "address1" ] [ text "Address Line 1" ]
+                , input [ class "form-control", type_ "text", onInput (NewCompanyMsg << Address1Updated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "Address Line 2"
-                    , input [ type_ "text", onInput (NewCompanyMsg << Address2Updated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "address2" ] [ text "Address Line 2" ]
+                , input [ id "address2", class "form-control", type_ "text", onInput (NewCompanyMsg << Address2Updated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "City"
-                    , input [ type_ "text", onInput (NewCompanyMsg << CityUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "city" ] [ text "City" ]
+                , input [ id "city", class "form-control", type_ "text", onInput (NewCompanyMsg << CityUpdated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "State"
-                    , input [ type_ "text", onInput (NewCompanyMsg << StateUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "state" ] [ text "State" ]
+                , input [ id "state", class "form-control", type_ "text", onInput (NewCompanyMsg << StateUpdated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "Zip Code"
-                    , input [ type_ "text", onInput (NewCompanyMsg << ZipCodeUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "zipCode" ] [ text "Zip Code" ]
+                , input [ id "zipCode", class "form-control", type_ "text", onInput (NewCompanyMsg << ZipCodeUpdated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "Phone Number"
-                    , input [ type_ "text", onInput (NewCompanyMsg << PhoneNumberUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "phoneNumber" ] [ text "Phone Number" ]
+                , input [ id "phoneNumber", class "form-control", type_ "text", onInput (NewCompanyMsg << PhoneNumberUpdated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "Fax Number"
-                    , input [ type_ "text", onInput (NewCompanyMsg << FaxNumberUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "faxNumber" ] [ text "Fax Number" ]
+                , input [ id "faxNumber", class "form-control", type_ "text", onInput (NewCompanyMsg << FaxNumberUpdated) ] []
                 ]
-            , div []
-                [ label []
-                    [ text "Category"
-                    , input [ type_ "text", onInput (NewCompanyMsg << CategoryUpdated) ] []
-                    ]
+            , div [ class "form-group" ]
+                [ label [ for "category" ] [ text "Category" ]
+                , input [ id "category", class "form-control", type_ "text", onInput (NewCompanyMsg << CategoryUpdated) ] []
                 ]
             , errorView companies
-            , button
-                [ type_ "button"
-                , onClick (NewCompanyMsg CancelNewCompanyClicked)
-                , disabled (WebData.isLoading companies)
+            , div [ class "card" ]
+                [ div [ class "card-body" ]
+                    [ button
+                        [ type_ "button"
+                        , class "btn btn-secondary"
+                        , onClick (NewCompanyMsg CancelNewCompanyClicked)
+                        , disabled (WebData.isLoading companies)
+                        ]
+                        [ text "Cancel" ]
+                    , text " "
+                    , if WebData.isLoading companies then
+                        button [ class "btn btn-primary", type_ "button", disabled True ] [ text "Saving..." ]
+                      else
+                        button [ class "btn btn-primary", type_ "button", onClick (NewCompanyMsg SaveNewCompanyClicked) ] [ text "Save" ]
+                    ]
                 ]
-                [ text "Cancel" ]
-            , if WebData.isLoading companies then
-                button [ type_ "button", disabled True ] [ text "Saving..." ]
-              else
-                button [ type_ "button", onClick (NewCompanyMsg SaveNewCompanyClicked) ] [ text "Save" ]
             ]
         )
 
 
 errorView : WebData a -> Html msg
 errorView webData =
-    if WebData.isFailure webData then
-        div [ class "alert alert-error" ] [ text "Unknown error has occured" ]
-    else
-        text ""
+    case WebData.getErrorMessage webData of
+        Just errorMessage ->
+            div [ class "alert alert-danger", attribute "role" "alert" ]
+                [ text errorMessage ]
+
+        Nothing ->
+            text ""
 
 
 companyListView : WebData (List Company) -> Html Msg
@@ -119,7 +113,7 @@ companyListView webData =
             templateView empty
 
         WebData.RemoteData (RemoteData.Success companies) ->
-            templateView empty
+            templateView (companyTableView companies)
 
         WebData.FailureWithData error companies ->
             templateView empty
@@ -128,11 +122,53 @@ companyListView webData =
             templateView empty
 
 
+companyTableView : List Company -> Html Msg
+companyTableView companies =
+    div []
+        [ table [ class "table" ]
+            [ thead []
+                [ tr []
+                    [ th [] [ text "Id" ]
+                    , th [] [ text "Name" ]
+                    , th [] [ text "Address1" ]
+                    , th [] [ text "Address2" ]
+                    , th [] [ text "City" ]
+                    , th [] [ text "State" ]
+                    , th [] [ text "ZipCode" ]
+                    , th [] [ text "PhoneNumber" ]
+                    , th [] [ text "FaxNumber" ]
+                    , th [] [ text "Category" ]
+                    ]
+                ]
+            , tbody [] (companies |> List.map companyRowView)
+            ]
+        , actionView companies
+        ]
+
+
+companyRowView : Company -> Html Msg
+companyRowView company =
+    tr []
+        [ td [] [ text <| toString company.id ]
+        , td [] [ text company.name ]
+        , td [] [ text company.address1 ]
+        , td [] [ text company.address2 ]
+        , td [] [ text company.city ]
+        , td [] [ text company.state ]
+        , td [] [ text company.zipCode ]
+        , td [] [ text company.phoneNumber ]
+        , td [] [ text company.faxNumber ]
+        , td [] [ text company.category ]
+        ]
+
+
 templateView : Html Msg -> Html Msg
 templateView content =
-    div []
-        [ headerView
-        , content
+    div [ class "card" ]
+        [ div [ class "card-body" ]
+            [ headerView
+            , content
+            ]
         ]
 
 
@@ -143,10 +179,13 @@ headerView =
 
 actionView : List Company -> Html Msg
 actionView companies =
-    div []
-        [ button
-            [ type_ "button", onClick (NewCompanyClicked companies) ]
-            [ text "New Company" ]
+    div [ class "card" ]
+        [ div
+            [ class "card-body" ]
+            [ button
+                [ class "btn btn-primary", type_ "button", onClick (NewCompanyClicked companies) ]
+                [ text "New Company" ]
+            ]
         ]
 
 

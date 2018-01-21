@@ -21,7 +21,7 @@ let layout (content: XmlNode list) =
             title []  [ encodedText "Contact Manager" ]
             link [ attr "rel"  "stylesheet"
                    attr "type" "text/css"
-                   attr "href" "/main.css" ]
+                   attr "href" "/bootstrap.min.css" ]
             script [ attr "src" "/elm.min.js" ] []    
         ]
         body [] content
@@ -45,8 +45,8 @@ let webApp =
         GET >=>
             choose [
                 route "/" >=> indexHandler ()
-                routeStartsWith "/api" >=> apiHandler ()
             ]
+        routeStartsWith "/api" >=> apiHandler ()
         setStatusCode 404 >=> text "Not Found" ]
 
 // ---------------------------------
