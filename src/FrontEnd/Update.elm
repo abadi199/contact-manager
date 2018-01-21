@@ -2,9 +2,10 @@ module Update exposing (update)
 
 import Api
 import Http
-import Model exposing (Company, Model, Route(..))
+import Model exposing (Category, Company, Model, Route(..))
 import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
+import String
 import WebData exposing (WebData)
 
 
@@ -14,15 +15,17 @@ update msg model =
         CompanyListRoute { companies } ->
             updateCompanyListRoute msg companies
 
-        CompanyRoute { companies, company } ->
+        CompanyRoute { companies, company, categories, categoryMode } ->
             case msg of
                 CompanyMsg companyMsg ->
-                    updateCompanyRoute companyMsg companies company
+                    updateCompanyRoute companyMsg companies categories categoryMode company
 
                 _ ->
                     ( CompanyRoute
                         { companies = WebData.error (Http.BadUrl "InvalidSate") companies
                         , company = company
+                        , categories = categories
+                        , categoryMode = Model.SelectCategory
                         }
                     , Cmd.none
                     )
@@ -41,8 +44,10 @@ updateCompanyListRoute msg companies =
             ( CompanyRoute
                 { companies = WebData.RemoteData (RemoteData.Success companies)
                 , company = Model.newCompany
+                , categories = []
+                , categoryMode = Model.SelectCategory
                 }
-            , Cmd.none
+            , Api.getCategories
             )
 
         DeleteCompanyClicked companyId ->
@@ -52,7 +57,7 @@ updateCompanyListRoute msg companies =
 
         EditCompanyClicked companyId ->
             ( editCompany companyId companies
-            , Cmd.none
+            , Api.getCategories
             )
 
         CompanyMsg _ ->
@@ -70,45 +75,45 @@ editCompany companyId companies =
     companies
         |> WebData.toMaybe
         |> Maybe.andThen findCompany
-        |> Maybe.map (\company -> CompanyRoute { companies = companies, company = company })
+        |> Maybe.map (\company -> CompanyRoute { companies = companies, company = company, categories = [], categoryMode = Model.SelectCategory })
         |> Maybe.withDefault (CompanyListRoute { companies = companies })
 
 
-updateCompanyRoute : CompanyMsg -> WebData (List Company) -> Company -> ( Route, Cmd Msg )
-updateCompanyRoute msg companies company =
+updateCompanyRoute : CompanyMsg -> WebData (List Company) -> List Category -> Model.CategoryMode -> Company -> ( Route, Cmd Msg )
+updateCompanyRoute msg companies categories categoryMode company =
     case msg of
         CancelCompanyClicked ->
             ( CompanyListRoute { companies = companies }, Cmd.none )
 
         SaveCompanyClicked ->
-            saveCompany companies company
+            saveCompany companies categories company
 
         NameUpdated value ->
-            ( { company | name = value } |> companyRoute companies, Cmd.none )
+            ( { company | name = value } |> companyRoute companies categories, Cmd.none )
 
         Address1Updated value ->
-            ( { company | address1 = value } |> companyRoute companies, Cmd.none )
+            ( { company | address1 = value } |> companyRoute companies categories, Cmd.none )
 
         Address2Updated value ->
-            ( { company | address2 = value } |> companyRoute companies, Cmd.none )
+            ( { company | address2 = value } |> companyRoute companies categories, Cmd.none )
 
         CityUpdated value ->
-            ( { company | city = value } |> companyRoute companies, Cmd.none )
+            ( { company | city = value } |> companyRoute companies categories, Cmd.none )
 
         StateUpdated value ->
-            ( { company | state = value } |> companyRoute companies, Cmd.none )
+            ( { company | state = value } |> companyRoute companies categories, Cmd.none )
 
         ZipCodeUpdated value ->
-            ( { company | zipCode = value } |> companyRoute companies, Cmd.none )
+            ( { company | zipCode = value } |> companyRoute companies categories, Cmd.none )
 
         PhoneNumberUpdated value ->
-            ( { company | phoneNumber = value } |> companyRoute companies, Cmd.none )
+            ( { company | phoneNumber = value } |> companyRoute companies categories, Cmd.none )
 
         FaxNumberUpdated value ->
-            ( { company | faxNumber = value } |> companyRoute companies, Cmd.none )
+            ( { company | faxNumber = value } |> companyRoute companies categories, Cmd.none )
 
         CategoryUpdated value ->
-            ( { company | category = value } |> companyRoute companies, Cmd.none )
+            ( { company | category = value } |> companyRoute companies categories, Cmd.none )
 
         SaveCompanyCompleted webData ->
             case webData of
@@ -116,24 +121,68 @@ updateCompanyRoute msg companies company =
                     ( CompanyListRoute { companies = WebData.RemoteData (RemoteData.Success companies) }, Cmd.none )
 
                 RemoteData.Failure error ->
-                    ( companyRoute (WebData.error error companies) company
+                    ( companyRoute (WebData.error error companies) categories company
                     , Cmd.none
                     )
 
                 _ ->
-                    ( companyRoute companies company, Cmd.none )
+                    ( companyRoute companies categories company, Cmd.none )
+
+        NewCategoryClicked ->
+            ( CompanyRoute { companies = companies, company = company, categories = categories, categoryMode = Model.NewCategory "" }
+            , Cmd.none
+            )
+
+        CategoryNameUpdated name ->
+            case categoryMode of
+                Model.SelectCategory ->
+                    ( companyRoute companies categories company
+                    , Cmd.none
+                    )
+
+                Model.NewCategory _ ->
+                    ( CompanyRoute { companies = companies, company = company, categories = categories, categoryMode = Model.NewCategory name }
+                    , Cmd.none
+                    )
+
+        SaveNewCategoryClicked ->
+            ( CompanyRoute { companies = companies, company = company, categories = categories, categoryMode = categoryMode }
+            , Api.newCategory categoryMode
+            )
+
+        SaveEditCategoryClicked ->
+            ( CompanyRoute { companies = companies, company = company, categories = categories, categoryMode = categoryMode }
+            , Cmd.none
+            )
+
+        CancelCategoryClicked ->
+            ( companyRoute companies categories company, Cmd.none )
+
+        GetCategoriesCompleted webData ->
+            case webData of
+                RemoteData.Success data ->
+                    ( companyRoute companies data company, Cmd.none )
+
+                RemoteData.Failure error ->
+                    ( companyRoute (WebData.error error companies) categories company, Cmd.none )
+
+                _ ->
+                    ( companyRoute companies categories company, Cmd.none )
 
 
-companyRoute : WebData (List Company) -> Company -> Route
-companyRoute companies company =
-    CompanyRoute { companies = companies, company = company }
+companyRoute : WebData (List Company) -> List Category -> Company -> Route
+companyRoute companies categories company =
+    CompanyRoute { companies = companies, company = company, categories = categories, categoryMode = Model.SelectCategory }
 
 
-saveCompany : WebData (List Company) -> Company -> ( Route, Cmd Msg )
-saveCompany companies company =
-    ( companyRoute (companies |> WebData.loading) company
-    , if Model.isNewCompany company then
-        Api.newCompany company
-      else
-        Api.updateCompany company
-    )
+saveCompany : WebData (List Company) -> List Category -> Company -> ( Route, Cmd Msg )
+saveCompany companies categories company =
+    if String.trim company.name == "" then
+        ( companyRoute (companies |> WebData.error (Http.BadUrl "Name is required")) categories company, Cmd.none )
+    else
+        ( companyRoute (companies |> WebData.loading) categories company
+        , if Model.isNewCompany company then
+            Api.newCompany company
+          else
+            Api.updateCompany company
+        )

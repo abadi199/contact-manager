@@ -3,7 +3,8 @@ module View exposing (view)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Model exposing (Company, Model, Route(..))
+import Json.Decode
+import Model exposing (Category, Company, Model, Route(..))
 import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import WebData exposing (WebData(..))
@@ -15,12 +16,12 @@ view model =
         CompanyListRoute { companies } ->
             companyListView companies
 
-        CompanyRoute { companies, company } ->
-            companyView companies company
+        CompanyRoute { companies, categories, company, categoryMode } ->
+            companyForm companies categories categoryMode company
 
 
-companyView : WebData (List Company) -> Company -> Html Msg
-companyView companies company =
+companyForm : WebData (List Company) -> List Category -> Model.CategoryMode -> Company -> Html Msg
+companyForm companies categories categoryMode company =
     templateView
         (Html.form []
             [ h2 []
@@ -63,7 +64,7 @@ companyView companies company =
                 ]
             , div [ class "form-group" ]
                 [ label [ for "category" ] [ text "Category" ]
-                , input [ id "category", class "form-control", type_ "text", onInput (CompanyMsg << CategoryUpdated), value company.category ] []
+                , categoryDropdown company categories categoryMode
                 ]
             , errorView companies
             , div [ class "card" ]
@@ -84,6 +85,29 @@ companyView companies company =
                 ]
             ]
         )
+
+
+categoryDropdown : Company -> List Category -> Model.CategoryMode -> Html Msg
+categoryDropdown company categories categoryMode =
+    let
+        options =
+            categories
+                |> List.map (\category -> option [ value category, selected (category == company.category) ] [ text category ])
+    in
+    case categoryMode of
+        Model.SelectCategory ->
+            div []
+                [ select [ style [ ( "margin-bottom", "0.5em" ) ], id "category", class "form-control", on "change" (Json.Decode.map (CompanyMsg << CategoryUpdated) targetValue) ] options
+                , button [ class "btn", type_ "button", onClick (CompanyMsg NewCategoryClicked) ] [ text "New" ]
+                ]
+
+        Model.NewCategory name ->
+            div []
+                [ input [ id "category", class "form-control", value name, onInput (CompanyMsg << CategoryNameUpdated), style [ ( "margin-bottom", "0.5em" ) ] ] []
+                , button [ type_ "button", class "btn btn-secondary", onClick (CompanyMsg CancelCategoryClicked) ] [ text "Cancel" ]
+                , text " "
+                , button [ type_ "button", class "btn btn-primary", onClick (CompanyMsg SaveNewCategoryClicked) ] [ text "Save" ]
+                ]
 
 
 errorView : WebData a -> Html msg

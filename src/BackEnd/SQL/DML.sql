@@ -11,3 +11,8 @@ CREATE TABLE Company(
     FaxNumber nvarchar (128) NOT NULL,  
     Category nvarchar (128) NOT NULL
 );
+
+DROP TABLE IF EXISTS Category;
+CREATE TABLE Category(
+    [Name] nvarchar (128) PRIMARY KEY NOT NULL
+)

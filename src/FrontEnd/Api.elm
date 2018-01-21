@@ -1,12 +1,15 @@
 module Api
     exposing
         ( deleteCompany
+        , getCategories
         , getCompanies
+        , newCategory
         , newCompany
         , updateCompany
         )
 
 import Json exposing (companiesDecoder, companyEncoder)
+import Json.Decode
 import Json.Encode
 import Model exposing (Company)
 import Msg exposing (CompanyMsg(..), Msg(..))
@@ -57,3 +60,30 @@ deleteCompany companyId =
     deleteTask
         |> Task.andThen (\_ -> getCompaniesTask)
         |> Task.perform GetCompaniesCompleted
+
+
+newCategory : Model.CategoryMode -> Cmd Msg
+newCategory categoryMode =
+    case categoryMode of
+        Model.NewCategory name ->
+            RemoteData.Http.post
+                "/api/category/new"
+                (CompanyMsg << GetCategoriesCompleted)
+                (Json.Decode.list Json.Decode.string)
+                (Json.Encode.string name)
+
+        _ ->
+            Cmd.none
+
+
+getCategories : Cmd Msg
+getCategories =
+    getCategoriesTask
+        |> Task.perform (CompanyMsg << GetCategoriesCompleted)
+
+
+getCategoriesTask : Task.Task Never (RemoteData.WebData (List Model.Category))
+getCategoriesTask =
+    RemoteData.Http.getTask
+        "/api/category"
+        (Json.Decode.list Json.Decode.string)

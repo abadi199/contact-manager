@@ -26,3 +26,9 @@ type CompanyMsg
     | PhoneNumberUpdated String
     | FaxNumberUpdated String
     | CategoryUpdated String
+    | NewCategoryClicked
+    | CategoryNameUpdated String
+    | SaveNewCategoryClicked
+    | SaveEditCategoryClicked
+    | CancelCategoryClicked
+    | GetCategoriesCompleted (WebData (List Model.Category))

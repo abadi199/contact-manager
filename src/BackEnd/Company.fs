@@ -11,3 +11,6 @@ type Company() =
     member val PhoneNumber = "" with get, set
     member val FaxNumber = "" with get, set
     member val Category = "" with get, set
+
+type Category() =
+    member val Name = "" with get, set

@@ -1,6 +1,8 @@
 module Model
     exposing
-        ( Company
+        ( Category
+        , CategoryMode(..)
+        , Company
         , CompanyId(..)
         , Model
         , Route(..)
@@ -16,7 +18,12 @@ import WebData exposing (WebData)
 
 type Route
     = CompanyListRoute { companies : WebData (List Company) }
-    | CompanyRoute { companies : WebData (List Company), company : Company }
+    | CompanyRoute { companies : WebData (List Company), company : Company, categories : List Category, categoryMode : CategoryMode }
+
+
+type CategoryMode
+    = SelectCategory
+    | NewCategory String
 
 
 type alias Model =
@@ -80,3 +87,7 @@ newCompany =
 initialModel : Model
 initialModel =
     CompanyListRoute { companies = WebData.RemoteData RemoteData.Loading }
+
+
+type alias Category =
+    String

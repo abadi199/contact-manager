@@ -44,3 +44,20 @@ let deleteCompany (companyId: int) =
     use db = new Database(conn)
     let company = db.SingleById<Company>(companyId)
     db.Delete(company)
+
+let getCategories () =
+    use conn = new SqliteConnection(connString)
+    conn.Open ()
+    use db = new Database(conn)
+    db.Fetch<Category>()
+
+let newCategory (name: string) =
+    use conn = new SqliteConnection(connString)
+    conn.Open ()
+    use txn: SqliteTransaction = conn.BeginTransaction()
+    let cmd = conn.CreateCommand()
+    cmd.Transaction <- txn
+    cmd.CommandText <- "insert into Category(Name) values ($Name)"
+    cmd.Parameters.AddWithValue("$Name", name) |> ignore
+    cmd.ExecuteNonQuery () |> ignore
+    txn.Commit ()

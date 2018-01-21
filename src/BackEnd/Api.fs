@@ -46,8 +46,30 @@ let companyHandler () =
         ]
     ]
 
+let getCategoriesHandler (next: HttpFunc) (ctx: HttpContext) =
+    let categories = getCategories () |> Seq.map (fun category -> category.Name)
+    json categories next ctx
+
+let newCategoryHandler (next: HttpFunc) (ctx: HttpContext) =
+    task {
+        let! categoryName = ctx.BindJsonAsync<string>() 
+        newCategory categoryName
+        let categories = getCategories () |> Seq.map (fun category -> category.Name)
+        return! json categories next ctx 
+    }
+
+let categoryHandler () =
+    choose [
+        GET >=> choose [
+            route "/api/category" >=> getCategoriesHandler
+        ]
+        POST >=> choose [
+            route "/api/category/new" >=> newCategoryHandler
+        ]
+    ]
+
 let apiHandler () =
     choose [ 
         routeStartsWith "/api/company" >=> companyHandler ()
-        routeStartsWith "/api/contact" >=> contactHandler ()
+        routeStartsWith "/api/category" >=> categoryHandler ()
     ]
