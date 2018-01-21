@@ -8,3 +8,12 @@ h1 {
     font-size: 1.5em;
     color: #334499;
 }
+
+label {
+    margin-bottom: 1em;
+    display: block;
+}
+
+input[type="text"] { 
+    display: block;
+}

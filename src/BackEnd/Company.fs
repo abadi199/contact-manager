@@ -1,7 +1,5 @@
 module ContactManager.Company
 
-open Giraffe
-
 type Company() =
     member val Id = 0 with get, set
     member val Name = "" with get, set
