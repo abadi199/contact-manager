@@ -1,6 +1,7 @@
 module Update exposing (update)
 
 import Api
+import Http
 import Model exposing (Company, Model, NewCompany, Route(..))
 import Msg exposing (Msg(..), NewCompanyMsg(..))
 import RemoteData
@@ -9,9 +10,29 @@ import WebData exposing (WebData)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
+    case model of
+        CompanyListRoute { companies } ->
+            updateCompanyListRoute msg companies
+
+        NewCompanyRoute { companies, newCompany } ->
+            case msg of
+                NewCompanyMsg newCompanyMsg ->
+                    updateNewCompanyRoute newCompanyMsg companies newCompany
+
+                _ ->
+                    ( NewCompanyRoute
+                        { companies = WebData.error (Http.BadUrl "InvalidSate") companies
+                        , newCompany = newCompany
+                        }
+                    , Cmd.none
+                    )
+
+
+updateCompanyListRoute : Msg -> WebData (List Company) -> ( Route, Cmd Msg )
+updateCompanyListRoute msg companies =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            ( CompanyListRoute { companies = companies }, Cmd.none )
 
         GetCompaniesCompleted webData ->
             ( CompanyListRoute { companies = WebData.RemoteData webData }, Cmd.none )
@@ -24,17 +45,17 @@ update msg model =
             , Cmd.none
             )
 
+        DeleteCompanyClicked companyId ->
+            ( CompanyListRoute { companies = WebData.loading companies }
+            , Api.deleteCompany companyId
+            )
+
         NewCompanyMsg newCompanyMsg ->
-            case model of
-                NewCompanyRoute { companies, newCompany } ->
-                    updateNewCompany newCompanyMsg companies newCompany
-
-                _ ->
-                    ( model, Cmd.none )
+            ( CompanyListRoute { companies = WebData.error (Http.BadUrl "Invalid State") companies }, Cmd.none )
 
 
-updateNewCompany : NewCompanyMsg -> WebData (List Company) -> NewCompany -> ( Route, Cmd Msg )
-updateNewCompany msg companies newCompany =
+updateNewCompanyRoute : NewCompanyMsg -> WebData (List Company) -> NewCompany -> ( Route, Cmd Msg )
+updateNewCompanyRoute msg companies newCompany =
     case msg of
         CancelNewCompanyClicked ->
             ( CompanyListRoute { companies = companies }, Cmd.none )

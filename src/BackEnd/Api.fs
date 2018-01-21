@@ -18,6 +18,12 @@ let newCompanyHandler (next: HttpFunc) (ctx: HttpContext) =
         return! json companies next ctx 
     }
 
+let deleteCompanyHandler (companyId: int) (next: HttpFunc) (ctx: HttpContext) =
+    deleteCompany companyId |> ignore
+    let companies = getCompanies ()
+    json companies next ctx
+
+
 let companyHandler () =
     choose [
         GET >=> choose [ 
@@ -26,10 +32,10 @@ let companyHandler () =
         POST >=> choose [ 
             route "/api/company/new" >=> newCompanyHandler 
         ]
+        DELETE >=> choose [
+            routef "/api/company/%i" deleteCompanyHandler
+        ]
     ]
-
-
-
 
 let apiHandler () =
     choose [ 

@@ -31,3 +31,10 @@ let newCompany (newCompany: Company) =
     cmd.Parameters.AddWithValue("$Category", newCompany.Category) |> ignore
     cmd.ExecuteNonQuery () |> ignore
     txn.Commit ()
+
+let deleteCompany (companyId: int) =
+    use conn = new SqliteConnection(connString)
+    conn.Open ()
+    use db = new Database(conn)
+    let company = db.SingleById<Company>(companyId)
+    db.Delete(company)

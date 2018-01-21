@@ -119,31 +119,39 @@ companyListView webData =
             templateView empty
 
         WebData.Reloading companies ->
-            templateView empty
+            templateView
+                (div []
+                    [ companyTableView companies
+                    , loading
+                    ]
+                )
 
 
 companyTableView : List Company -> Html Msg
 companyTableView companies =
-    div []
-        [ table [ class "table" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Id" ]
-                    , th [] [ text "Name" ]
-                    , th [] [ text "Address1" ]
-                    , th [] [ text "Address2" ]
-                    , th [] [ text "City" ]
-                    , th [] [ text "State" ]
-                    , th [] [ text "ZipCode" ]
-                    , th [] [ text "PhoneNumber" ]
-                    , th [] [ text "FaxNumber" ]
-                    , th [] [ text "Category" ]
+    if List.isEmpty companies then
+        empty
+    else
+        div []
+            [ table [ class "table" ]
+                [ thead []
+                    [ tr []
+                        [ th [] [ text "Id" ]
+                        , th [] [ text "Name" ]
+                        , th [] [ text "Address" ]
+                        , th [] [ text "City" ]
+                        , th [] [ text "State" ]
+                        , th [] [ text "ZipCode" ]
+                        , th [] [ text "PhoneNumber" ]
+                        , th [] [ text "FaxNumber" ]
+                        , th [] [ text "Category" ]
+                        , th [] []
+                        ]
                     ]
+                , tbody [] (companies |> List.map companyRowView)
                 ]
-            , tbody [] (companies |> List.map companyRowView)
+            , actionView companies
             ]
-        , actionView companies
-        ]
 
 
 companyRowView : Company -> Html Msg
@@ -151,14 +159,21 @@ companyRowView company =
     tr []
         [ td [] [ text <| toString company.id ]
         , td [] [ text company.name ]
-        , td [] [ text company.address1 ]
-        , td [] [ text company.address2 ]
+        , td [] [ text company.address1, br [] [], text company.address2 ]
         , td [] [ text company.city ]
         , td [] [ text company.state ]
         , td [] [ text company.zipCode ]
         , td [] [ text company.phoneNumber ]
         , td [] [ text company.faxNumber ]
         , td [] [ text company.category ]
+        , td []
+            [ button
+                [ class "btn btn-danger btn-sm"
+                , type_ "button"
+                , onClick (DeleteCompanyClicked company.id)
+                ]
+                [ text "Delete" ]
+            ]
         ]
 
 
@@ -192,11 +207,21 @@ actionView companies =
 empty : Html Msg
 empty =
     div []
-        [ actionView []
-        , text "No companies found."
+        [ text "No companies found."
+        , actionView []
         ]
 
 
 loading : Html Msg
 loading =
-    text "Loading..."
+    div
+        [ class "alert alert-info"
+        , style
+            [ ( "position", "absolute" )
+            , ( "top", "0" )
+            , ( "right", "0" )
+            , ( "border-radius", "0" )
+            , ( "padding", "0.25em 1em" )
+            ]
+        ]
+        [ text "Loading..." ]

@@ -9,6 +9,7 @@ type Msg
     | GetCompaniesCompleted (WebData (List Company))
     | NewCompanyClicked (List Company)
     | NewCompanyMsg NewCompanyMsg
+    | DeleteCompanyClicked Int
 
 
 type NewCompanyMsg
