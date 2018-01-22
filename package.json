@@ -6,7 +6,8 @@
   "scripts": {
     "start": "dotnet restore src/BackEnd && dotnet build src/BackEnd && dotnet run --project src/BackEnd",
     "build": "elm make src/FrontEnd/Main.elm --output src/BackEnd/WebRoot/elm.js --debug && uglifyjs src/BackEnd/WebRoot/elm.js -o src/BackEnd/WebRoot/elm.min.js && rimraf src/BackEnd/WebRoot/elm.js",
-    "reset-db": "sqlite3 src/BackEnd/ContactManager.db < src/BackEnd/SQL/DML.sql"
+    "reset-db": "sqlite3 src/BackEnd/ContactManager.db < src/BackEnd/SQL/DML.sql",
+    "publish": "dotnet publish src/BackEnd -o ../../published"
   },
   "author": "",
   "license": "ISC",
