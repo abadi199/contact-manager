@@ -1,31 +1,28 @@
-# ContactManager
+# Contact Manager
 
-A [Giraffe](https://github.com/giraffe-fsharp/Giraffe) web application, which has been created via the `dotnet new giraffe` command.
+## Accessing the web app on Azure
+This web app has been deployed to Azure via docker and can be access at this URL:
+https://contactmanagerabadi.azurewebsites.net
 
-## Build and test the application
+## Requirement 
+- Dotnet Core 2.0 SDK
+- Node.js and NPM
+- sqlite3
 
-### Windows
-
-Run the `build.bat` script in order to restore, build and test (if you've selected to include tests) the application:
-
-```
-> ./build.bat
-```
-
-### Linux/macOS
-
-Run the `build.sh` script in order to restore, build and test (if you've selected to include tests) the application:
+## Build the application locally
 
 ```
-$ ./build.sh
+npm install
+npm run build
+npm run reset-db
 ```
 
-## Run the application
+## Run the application locally
 
 After a successful build you can start the web application by executing the following command in your terminal:
 
 ```
-dotnet run --project src/ContactManager
+npm start
 ```
 
 After the application has started visit [http://localhost:5000](http://localhost:5000) in your preferred browser.
