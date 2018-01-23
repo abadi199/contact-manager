@@ -23,7 +23,16 @@ update msg model =
                 GetCategoriesCompleted webData ->
                     case webData of
                         RemoteData.Success newCategories ->
-                            ( companyRoute companies newCategories filter { company | category = newCategories |> List.head }, Cmd.none )
+                            let
+                                setToFirstCompanyIfEmpty company =
+                                    case company.category of
+                                        Nothing ->
+                                            { company | category = newCategories |> List.head }
+
+                                        Just _ ->
+                                            company
+                            in
+                            ( companyRoute companies newCategories filter (setToFirstCompanyIfEmpty company), Cmd.none )
 
                         RemoteData.Failure error ->
                             ( companyRoute (WebData.error error companies) categories filter company, Cmd.none )
