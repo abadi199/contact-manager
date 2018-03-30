@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
   function unmounConfirmationDialog() {
     if (confirmComponent) {
-      confirmComponent.setState({ show: false });
+      confirmComponent.setState({ ...confirmComponent.state, show: false });
     }
   }
 
