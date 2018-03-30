@@ -13,12 +13,15 @@ import WebData exposing (WebData(..))
 
 view : Model -> Html Msg
 view model =
-    case model of
-        CompanyListRoute { companies, categories, filter } ->
-            companyListView companies categories filter
+    div []
+        [ case model of
+            CompanyListRoute { companies, categories, filter } ->
+                companyListView companies categories filter
 
-        CompanyRoute { companies, categories, company, categoryMode, filter } ->
-            companyForm companies categories categoryMode company
+            CompanyRoute { companies, categories, company, categoryMode, filter } ->
+                companyForm companies categories categoryMode company
+        , div [ Html.Attributes.id "confirmationDialog" ] []
+        ]
 
 
 companyForm : WebData (List Company) -> List Category -> Model.CategoryMode -> Company -> Html Msg
