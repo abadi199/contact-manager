@@ -10,6 +10,7 @@ type Msg
     | NewCompanyClicked (List Company)
     | CompanyMsg CompanyMsg
     | DeleteCompanyClicked Int
+    | DeleteCompanyConfirmed Int
     | EditCompanyClicked Int
     | GetCategoriesCompleted (WebData (List Model.Category))
     | SearchByPhoneUpdated String

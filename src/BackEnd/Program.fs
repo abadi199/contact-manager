@@ -23,13 +23,14 @@ let layout (content: XmlNode list) =
                    attr "type" "text/css"
                    attr "href" "/bootstrap.min.css" ]
             script [ attr "src" "/elm.min.js" ] []    
+            script [ attr "src" "/index.js" ] []
         ]
         body [] content
     ]
 
 let indexView () =
     [
-        script [] [ rawText "Elm.Main.fullscreen();" ]
+        div [ attr "id" "root" ] []
     ] |> layout
 
 // ---------------------------------

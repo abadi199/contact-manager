@@ -1,4 +1,4 @@
-module Update exposing (update)
+port module Update exposing (update)
 
 import Api
 import Http
@@ -7,6 +7,9 @@ import Msg exposing (CompanyMsg(..), Msg(..))
 import RemoteData
 import String
 import WebData exposing (WebData)
+
+
+port confirm : { question : String, domId : String } -> Cmd msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -72,11 +75,6 @@ updateCompanyListRoute msg { companies, categories, filter } =
             , Api.getCategories
             )
 
-        DeleteCompanyClicked companyId ->
-            ( CompanyListRoute { companies = WebData.loading companies, categories = categories, filter = filter }
-            , Api.deleteCompany filter companyId
-            )
-
         EditCompanyClicked companyId ->
             ( editCompany companyId companies categories filter
             , Api.getCategories
@@ -114,6 +112,16 @@ updateCompanyListRoute msg { companies, categories, filter } =
         ClearFilterClicked ->
             ( CompanyListRoute { companies = WebData.loading companies, categories = categories, filter = Model.emptyFilter }
             , Api.getCompanies Model.emptyFilter
+            )
+
+        DeleteCompanyConfirmed companyId ->
+            ( CompanyListRoute { companies = WebData.loading companies, categories = categories, filter = filter }
+            , Api.deleteCompany filter companyId
+            )
+
+        DeleteCompanyClicked companyId ->
+            ( CompanyListRoute { companies = companies, categories = categories, filter = filter }
+            , confirm { question = "Are you sure you want to delete the company?", domId = "deleteButton" ++ toString companyId }
             )
 
 

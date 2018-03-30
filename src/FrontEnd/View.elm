@@ -245,7 +245,9 @@ companyRowView company =
                 [ button
                     [ class "btn btn-danger btn-sm"
                     , type_ "button"
+                    , Html.Attributes.id ("deleteButton" ++ toString id)
                     , onClick (DeleteCompanyClicked id)
+                    , on "confirmed" (Json.Decode.succeed (DeleteCompanyConfirmed id))
                     ]
                     [ text "Delete" ]
                 , text " "
